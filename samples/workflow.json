@@ -1,0 +1,112 @@
+{
+  "@context": "https://w3id.org/future-method/v1",
+  "authentication": [],
+  "created": "2019-04-09T19:02:11Z",
+  "id": "did:op:506c3469d5b74044864de17168a3056fc0fd9a375e19491dac1e760ee19ab66f",
+  "proof": {
+    "created": "2019-04-09T19:02:11Z",
+    "creator": "0x00Bd138aBD70e2F00903268F3Db08f2D25677C9e",
+    "signatureValue": "1cd57300733bcbcda0beb59b3e076de6419c0d7674e7befb77820b53c79e3aa8f1776effc64cf088bad8cb694cc4d71ebd74a13b2f75893df5a53f3f318f6cf828",
+    "type": "DDOIntegritySignature"
+  },
+  "publicKey": [
+    {
+      "id": "did:op:d80c84ca85004db2919ba2ec501b167d8601dc026d0b4692983138d1f0c87862",
+      "owner": "0x00Bd138aBD70e2F00903268F3Db08f2D25677C9e",
+      "type": "EthereumECDSAKey"
+    }
+  ],
+  "service": [
+    {
+      "serviceDefinitionId": "0",
+      "serviceEndpoint": "http://172.15.0.15:5000/api/v1/aquarius/assets/ddo/{did}",
+      "type": "Metadata",
+      "metadata": {
+        "base": {
+          "author": "Met Office",
+          "checksum": "0x67184faa8ccb1818524ed54127df79bc79700646659709ca2e7e6e6902060a3a",
+          "copyrightHolder": "Met Office",
+          "dateCreated": "2012-10-10T17:00:00Z",
+          "description": "Cleansing and filtering workflow of satellite stations",
+          "files": [],
+          "inLanguage": "en",
+          "license": "CC-BY",
+          "name": "Satellite Cleansing process",
+          "price": "0",
+          "type": "workflow",
+          "datePublished": "2019-04-09T19:02:11Z"
+        },
+        "curation": {
+          "rating": 0,
+          "numVotes": 0,
+          "isListed": true
+        },
+        "workflow": {
+          "stages": [
+            {
+              "index": 0,
+              "stageType": "Filtering",
+              "requirements": {
+                "computeServiceId": "did:op:834e14f556af4cac885b405f7d60c46bfc038edae9054760b54d293fc9c64026",
+                "serviceDefinitionId": "1",
+                "serverId": "1",
+                "serverInstances": 1,
+                "container": {
+                  "image": "tensorflow/tensorflow",
+                  "tag": "latest",
+                  "checksum": "sha256:cb57ecfa6ebbefd8ffc7f75c0f00e57a7fa739578a429b6f72a0df19315deadc"
+                }
+              },
+              "input": [
+                {
+                  "index": 0,
+                  "id": "did:op:7af781bf7f7144d8a3379f7f17dc41d8487c35c0f31c42c68bf2efa1a065c8e8"
+                },
+                {
+                  "index": 1,
+                  "id": "did:op:1588d5d9a9a04015ac8b96c601e8f56c552701eacbb246e78fcaade8e93a04b9"
+                }
+              ],
+              "transformation": {
+                "id": "did:op:5963479e26d04b6092b33d7b17a281a2c916aa326c9648bc8534408aaafbe106"
+              },
+              "output": {}
+            },
+            {
+              "index": 1,
+              "stageType": "Transformation",
+              "requirements": {
+                "computeServiceId": "did:op:2255b19f06ce4c2d819339f18018c0a78907e3292d3c4ad5ae3a1a0d59b4d42b",
+                "serviceDefinitionId": "1",
+                "serverId": "2",
+                "serverInstances": 1,
+                "container": {
+                  "image": "tensorflow/tensorflow",
+                  "tag": "latest",
+                  "checksum": "sha256:cb57ecfa6ebbefd8ffc7f75c0f00e57a7fa739578a429b6f72a0df19315deadc"
+                }
+              },
+              "input": [
+                {
+                  "index": 0,
+                  "previousStage": 0
+                }
+              ],
+              "transformation": {
+                "id": "did:op:d8a66bb554b249dcbfa575a2369f75bad50fc155b1b44599a1d3101819fd9c61"
+              },
+              "output": {
+                "metadataUrl": "http://172.15.0.15:5000",
+                "secretStoreUrl": "http://localhost:12001",
+                "accessProxyUrl": "http://localhost:8030",
+                "metadata": {
+                  "name": "Workflow output"
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  ]
+}
