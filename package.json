@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "description": "pod-publishing",
   "scripts": {
-    "start": "node src/index.js --workflow \"$(cat samples/workflow.json)\" --credentials \"$(cat ~/projects/ocean/barge/networks/spree/keys/account1.json)\" --password secret --inputs /tmp/squid-pod/inputs --transformations /tmp/squid-pod/transformations --verbose"
+    "start": "node src/index.js --workflow \"./samples/workflow.json\" --credentials \"$(cat ~/projects/ocean/barge/networks/spree/keys/account1.json)\" --password secret --outputs /tmp/pod-publishing/ --verbose"
   },
   "repository": {
     "type": "git",
@@ -18,7 +18,7 @@
   "peerDependencies": {},
   "dependencies": {
     "@oceanprotocol/squid": "^0.6.5",
-    "aws-sdk": "^2.495.0",
+    "aws-sdk": "^2.501.0",
     "commander": "^2.20.0",
     "ethereumjs-wallet": "^0.6.3"
   },
