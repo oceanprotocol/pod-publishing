@@ -9,6 +9,6 @@ ENTRYPOINT node src/index.js \
   --workflow "$WORKFLOW" \
   --credentials "$CREDENTIALS" \
   --password "$PASSWORD" \
-  --inputs "$INPUTS" \
-  --transformations "$TRANSFORMATIONS" \
+  --outputs "$OUTPUTS" \
+  --verbose "$VERBOSE" \
   --verbose
