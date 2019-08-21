@@ -9,6 +9,6 @@ ENTRYPOINT node src/index.js \
   --workflow "$WORKFLOW" \
   --credentials "$CREDENTIALS" \
   --password "$PASSWORD" \
-  --outputs "$OUTPUTS" \
-  --verbose "$VERBOSE" \
-  --verbose
+  --path "$VOLUME" \
+  --verbose \
+  # > "$VOLUME/pod-configuration-logs.txt" | tee file

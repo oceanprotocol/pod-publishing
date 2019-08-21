@@ -11,11 +11,11 @@ program
   .option('-n, --node <url>', 'Node URL')
   .option('-c, --credentials <json>', 'Creadentials file')
   .option('-p, --password <password>', 'Creadentials password')
-  .option('-o, --outputs <path>', 'Input path')
+  .option('-l, --path <path>', 'Volume path')
   .option('-v, --verbose', 'Enables verbose mode')
   .action(() => {
-    let {workflow, node, credentials, password, outputs, verbose} = program
-    const config = {workflow, node, credentials, password, outputs, verbose}
+    let {workflow, node, credentials, password, path, verbose} = program
+    const config = {workflow, node, credentials, password, path, verbose}
 
     main(config)
       .then(() => verbose && console.log('Finished!'))
@@ -28,9 +28,11 @@ async function main({
   node: nodeUri,
   credentials,
   password,
-  outputs: outputsDir,
+  path,
   verbose,
 }) {
+
+  const outputsDir = `${path}/outputs`
 
   const log = (...args) => verbose ? console.log(...args) : undefined
 
@@ -99,7 +101,7 @@ async function main({
         Body: '',
         ACL: 'public-read',
       }
-      const filePath = outputsDir + file
+      const filePath = outputsDir + '/' + file
 
       const fileStream = fs.createReadStream(filePath)
       fileStream.on('error', err => reject(err))
