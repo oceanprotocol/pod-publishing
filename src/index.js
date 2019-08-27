@@ -4,6 +4,7 @@ const program = require('commander')
 const { Ocean, Account } = require('@oceanprotocol/squid')
 const AWS = require('aws-sdk')
 const Wallet = require('ethereumjs-wallet')
+const PrivateKeyProvider = require("truffle-privatekey-provider");
 const fs = require('fs')
 
 program
@@ -39,6 +40,9 @@ async function main({
   // Config
   const credentialsWallet = Wallet.fromV3(credentials, password, true)
   const publicKey = '0x' + credentialsWallet.getAddress().toString('hex')
+  const privateKey = credentialsWallet.getPrivateKey()
+
+  const provider = new PrivateKeyProvider(privateKey, nodeUri);
 
   // Config from stage output
   const {stages} = JSON.parse(fs.readFileSync(workflowPath).toString())
@@ -58,6 +62,7 @@ async function main({
     threshold: 0,
     brizoAddress: `0x${'0'.repeat(39)}1`,
     verbose,
+    web3Provider: provider,
   })
 
   const publisher = new Account(publicKey, ocean.instanceConfig)

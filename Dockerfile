@@ -7,6 +7,7 @@ COPY . .
 
 ENTRYPOINT node src/index.js \
   --workflow "$WORKFLOW" \
+  --node "$NODE" \
   --credentials "$CREDENTIALS" \
   --password "$PASSWORD" \
   --path "$VOLUME" \
