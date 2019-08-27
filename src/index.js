@@ -19,7 +19,12 @@ program
     const config = {workflow, node, credentials, password, path, verbose}
 
     main(config)
-      .then(() => verbose && console.log('Finished!'))
+      .then(() => {
+        if (verbose) {
+          console.log('Finished!')
+        }
+        process.exit(0)
+      })
       .catch(e => console.error(e))
   })
   .parse(process.argv)
