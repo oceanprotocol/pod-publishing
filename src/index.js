@@ -16,10 +16,11 @@ program
   .option('--aquarius-url <url>', 'Aquarius URL')
   .option('--brizo-url <url>', 'Brizo URL')
   .option('--secret-store-url <url>', 'Secret Store URL')
+  .option('--brizo-address <address>', 'Brizo address')
   .option('-v, --verbose', 'Enables verbose mode')
   .action(() => {
-    let {workflow, node, credentials, password, path, aquariusUrl, brizoUrl, secretStoreUrl, verbose} = program
-    const config = {workflow, node, credentials, password, path, aquariusUrl, brizoUrl, secretStoreUrl, verbose}
+    let {workflow, node, credentials, password, path, aquariusUrl, brizoUrl, secretStoreUrl, brizoAddress, verbose} = program
+    const config = {workflow, node, credentials, password, path, aquariusUrl, brizoUrl, secretStoreUrl, brizoAddress, verbose}
 
     main(config)
       .then(() => {
@@ -41,6 +42,7 @@ async function main({
   aquariusUrl,
   brizoUrl,
   secretStoreUrl,
+  brizoAddress,
   verbose,
 }) {
 
@@ -59,10 +61,10 @@ async function main({
   const {stages} = JSON.parse(fs.readFileSync(workflowPath).toString())
     .service
     .find(({type}) => type === 'Metadata')
-    .metadata
+    .attributes
     .workflow
 
-  const {metadataUrl, secretStoreUrl: ssUrl, accessProxyUrl, metadata} = stages.pop().output
+  const {metadataUrl, secretStoreUrl: ssUrl, accessProxyUrl, brizoAddress: bAddress, metadata} = stages.pop().output
 
   if (verbose) {
     console.log('Config:')
@@ -71,14 +73,16 @@ async function main({
       aquariusUri: aquariusUrl || metadataUrl,
       brizoUri: brizoUrl || accessProxyUrl,
       secretStoreUri: secretStoreUrl || ssUrl,
+      brizoAddress: brizoAddress || bAddress,
     })
   }
 
   const ocean = await Ocean.getInstance({
     nodeUri,
     aquariusUri: aquariusUrl || metadataUrl,
-    brizoUri: brizoUrl || accessProxyUrl,
     secretStoreUri: secretStoreUrl || ssUrl,
+    brizoUri: brizoUrl || accessProxyUrl,
+    brizoAddress: brizoAddress || bAddress,
     parityUri: nodeUri,
     threshold: 0,
     brizoAddress: `0x${'0'.repeat(39)}1`,
