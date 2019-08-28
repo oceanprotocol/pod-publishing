@@ -11,5 +11,8 @@ ENTRYPOINT node src/index.js \
   --credentials "$CREDENTIALS" \
   --password "$PASSWORD" \
   --path "$VOLUME" \
+  --aquarius-url "$AQUARIUS_URL" \
+  --brizo-url "$BRIZO_URL" \
+  --secret-store-url "$SECRET_STORE_URL" \
   --verbose \
   # > "$VOLUME/pod-configuration-logs.txt" | tee file

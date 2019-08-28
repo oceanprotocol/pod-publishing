@@ -13,10 +13,13 @@ program
   .option('-c, --credentials <json>', 'Creadentials file')
   .option('-p, --password <password>', 'Creadentials password')
   .option('-l, --path <path>', 'Volume path')
+  .option('--aquarius-url <url>', 'Aquarius URL')
+  .option('--brizo-url <url>', 'Brizo URL')
+  .option('--secret-store-url <url>', 'Secret Store URL')
   .option('-v, --verbose', 'Enables verbose mode')
   .action(() => {
-    let {workflow, node, credentials, password, path, verbose} = program
-    const config = {workflow, node, credentials, password, path, verbose}
+    let {workflow, node, credentials, password, path, aquariusUrl, brizoUrl, secretStoreUrl, verbose} = program
+    const config = {workflow, node, credentials, password, path, aquariusUrl, brizoUrl, secretStoreUrl, verbose}
 
     main(config)
       .then(() => {
@@ -35,6 +38,9 @@ async function main({
   credentials,
   password,
   path,
+  aquariusUrl,
+  brizoUrl,
+  secretStoreUrl,
   verbose,
 }) {
 
@@ -56,13 +62,23 @@ async function main({
     .metadata
     .workflow
 
-  const {metadataUrl, secretStoreUrl, accessProxyUrl, metadata} = stages.pop().output
+  const {metadataUrl, secretStoreUrl: ssUrl, accessProxyUrl, metadata} = stages.pop().output
+
+  if (verbose) {
+    console.log('Config:')
+    console.log({
+      nodeUri,
+      aquariusUri: aquariusUrl || metadataUrl,
+      brizoUri: brizoUrl || accessProxyUrl,
+      secretStoreUri: secretStoreUrl || ssUrl,
+    })
+  }
 
   const ocean = await Ocean.getInstance({
     nodeUri,
-    aquariusUri: metadataUrl,
-    brizoUri: accessProxyUrl,
-    secretStoreUri: secretStoreUrl,
+    aquariusUri: aquariusUrl || metadataUrl,
+    brizoUri: brizoUrl || accessProxyUrl,
+    secretStoreUri: secretStoreUrl || ssUrl,
     parityUri: nodeUri,
     threshold: 0,
     brizoAddress: `0x${'0'.repeat(39)}1`,
