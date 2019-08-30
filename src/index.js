@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 const program = require('commander')
+const web3 = require('web3')
 const { Ocean, Account } = require('@oceanprotocol/squid')
 const AWS = require('aws-sdk')
 const Wallet = require('ethereumjs-wallet')
@@ -52,7 +53,7 @@ async function main({
 
   // Config
   const credentialsWallet = Wallet.fromV3(credentials, password, true)
-  const publicKey = '0x' + credentialsWallet.getAddress().toString('hex')
+  const publicKey = web3.utils.toChecksumAddress('0x' + credentialsWallet.getAddress().toString('hex'))
   const privateKey = credentialsWallet.getPrivateKey()
 
   const provider = new PrivateKeyProvider(privateKey, nodeUri);
