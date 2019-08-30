@@ -85,7 +85,6 @@ async function main({
     brizoAddress: brizoAddress || bAddress,
     parityUri: nodeUri,
     threshold: 0,
-    brizoAddress: `0x${'0'.repeat(39)}1`,
     verbose,
     web3Provider: provider,
   })
@@ -166,6 +165,16 @@ async function main({
   }, publisher)
 
   log('DDO:', ddo)
+
+  if (verbose) {
+    log('Is provider:', await ocean.keeper.didRegistry.isDIDProvider(
+        ddo.id,
+        brizoAddress || bAddress,
+    ))
+    log('Attributes:', await ocean.keeper.didRegistry.getAttributesByDid(
+        ddo.id,
+    ))
+  }
 
   console.log(ddo.id)
 }
