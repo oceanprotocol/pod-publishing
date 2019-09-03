@@ -6,6 +6,7 @@ const { Ocean, Account } = require('@oceanprotocol/squid')
 const AWS = require('aws-sdk')
 const Wallet = require('ethereumjs-wallet')
 const PrivateKeyProvider = require("truffle-privatekey-provider");
+const mime = require('mime-types')
 const fs = require('fs')
 
 program
@@ -48,6 +49,7 @@ async function main({
 }) {
 
   const outputsDir = `${path}/outputs`
+  const logsDir = `${path}/logs`
 
   const log = (...args) => verbose ? console.log(...args) : undefined
 
@@ -94,15 +96,26 @@ async function main({
   publisher.setPassword(password)
 
   // Read files
-  const files = (await new Promise(resolve => {
-    fs.readdir(outputsDir, {withFileTypes: true}, (e, fileList) => {
-      resolve(fileList)
+  const getFiles = folder => new Promise(resolve => {
+      fs.readdir(folder, {withFileTypes: true}, (e, fileList) => {
+        resolve(
+          (fileList || [])
+            .filter(_ => _.isFile())
+            .map(({name}) => ({
+              name,
+              path: `${folder}/${name}`,
+              contentType: mime.lookup(name) || undefined,
+              contentLength: fs.statSync(`${folder}/${name}`).size,
+            }))
+        )
+      })
     })
-  }))
-    .filter(_ => _.isFile())
-    .map(({name}) => name)
+
+  const files = await getFiles(outputsDir)
+  const logs = await getFiles(logsDir)
 
   log('Files:', files)
+  log('Logs:', logs)
 
   // Upload files to S3
   AWS.config.update({region: 'eu-central-1'})
@@ -123,7 +136,7 @@ async function main({
   log('Bucket:', bucket)
 
   // Uploading files
-  const uploads = files
+  const uploads = [...files, ...logs]
     .map(file => new Promise((resolve, reject) => {
       const uploadParams = {
         Bucket: bucketName,
@@ -131,20 +144,22 @@ async function main({
         Body: '',
         ACL: 'public-read',
       }
-      const filePath = outputsDir + '/' + file
+      const filePath = file.path
 
       const fileStream = fs.createReadStream(filePath)
       fileStream.on('error', err => reject(err))
 
       uploadParams.Body = fileStream
-      uploadParams.Key = file
+      uploadParams.Key = file.name
 
-      s3.upload(uploadParams, (err, data) => err ? reject(err) : resolve(data.Location))
+      s3.upload(uploadParams, (err, data) => err ? reject(err) : resolve({...file, url: data.Location}))
     }))
   
   let uploadedFiles = await Promise.all(uploads)
 
-  uploadedFiles = uploadedFiles.map((url, index) => ({url, index}))
+  uploadedFiles = uploadedFiles.map(
+    ({url, name, contentLength, contentType}, index) => ({url, name, contentLength, contentType, index})
+  )
 
   log('DDO files:', uploadedFiles)
 

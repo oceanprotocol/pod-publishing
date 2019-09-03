@@ -21,7 +21,7 @@
       "serviceDefinitionId": "0",
       "serviceEndpoint": "http://172.15.0.15:5000/api/v1/aquarius/assets/ddo/{did}",
       "type": "Metadata",
-      "metadata": {
+      "attributes": {
         "base": {
           "author": "Met Office",
           "checksum": "0x67184faa8ccb1818524ed54127df79bc79700646659709ca2e7e6e6902060a3a",
@@ -96,9 +96,9 @@
                 "id": "did:op:d8a66bb554b249dcbfa575a2369f75bad50fc155b1b44599a1d3101819fd9c61"
               },
               "output": {
-                "metadataUrl": "http://172.15.0.15:5000",
-                "secretStoreUrl": "http://localhost:12001",
-                "accessProxyUrl": "http://localhost:8030",
+                "metadataUrl": "https://aquarius.nile.dev-ocean.com",
+                "secretStoreUrl": "https://secret-store.duero.dev-ocean.com",
+                "accessProxyUrl": "https://brizo.nile.dev-ocean.com",
                 "metadata": {
                   "name": "Workflow output"
                 }
