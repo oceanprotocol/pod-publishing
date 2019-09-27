@@ -167,7 +167,7 @@ async function main({
   const publishingDate = new Date().toISOString().replace(/\.[0-9]{3}Z/, 'Z')
 
   const ddo = await ocean.assets.create({
-    base: {
+    main: {
       // Default metadata
       dateCreated: publishingDate,
       datePublished: publishingDate,
