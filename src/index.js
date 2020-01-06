@@ -15,10 +15,10 @@ program
   .option('-c, --credentials <json>', 'Creadentials file')
   .option('-p, --password <password>', 'Creadentials password')
   .option('-l, --path <path>', 'Volume path')
-  .option('--aquarius-url <url>', 'Aquarius URL')
-  .option('--brizo-url <url>', 'Brizo URL')
-  .option('--secret-store-url <url>', 'Secret Store URL')
-  .option('--brizo-address <address>', 'Brizo address')
+  .option('--aquarius <url>', 'Aquarius URL')
+  .option('--brizo <url>', 'Brizo URL')
+  .option('--secretstore <url>', 'Secret Store URL')
+  .option('--address <address>', 'Brizo address')
   .option('-v, --verbose', 'Enables verbose mode')
   .action(() => {
     let {workflow, node, credentials, password, path, aquariusUrl, brizoUrl, secretStoreUrl, brizoAddress, verbose} = program
@@ -42,16 +42,44 @@ async function main({
   password,
   path,
   aquariusUrl,
-  brizoUrl,
-  secretStoreUrl,
-  brizoAddress,
+  cbrizoUrl:brizoUrl,
+  csecretStoreUrl:secretStoreUrl,
+  cbrizoAddress:brizoAddress,
   verbose,
 }) {
 
+
+  
   const outputsDir = `${path}/outputs`
   const logsDir = `${path}/logs`
 
   const log = (...args) => verbose ? console.log(...args) : undefined
+
+
+
+
+  // Read files
+  const getFiles = folder => new Promise(resolve => {
+    fs.readdir(folder, {withFileTypes: true}, (e, fileList) => {
+      resolve(
+        (fileList || [])
+          .filter(_ => _.isFile())
+          .map(({name}) => ({
+            name,
+            path: `${folder}/${name}`,
+            contentType: mime.lookup(name) || undefined,
+            contentLength: String(fs.statSync(`${folder}/${name}`).size),
+          }))
+      )
+    })
+  })
+
+const files = await getFiles(outputsDir)
+log('Files:', files)
+const logs = await getFiles(logsDir)
+log('Logs:', logs)
+
+
 
   // Config
   const credentialsWallet = Wallet.fromV3(credentials, password, true)
@@ -62,60 +90,37 @@ async function main({
 
   // Config from stage output
   const {stages} = JSON.parse(fs.readFileSync(workflowPath).toString())
-    .service
-    .find(({type}) => type === 'Metadata')
-    .attributes
-    .workflow
-
-  const {metadataUrl, secretStoreUrl: ssUrl, accessProxyUrl, brizoAddress: bAddress, metadata} = stages.pop().output
+  //const {metadataUrl, secretStoreUrl, brizoUrl, brizoAddress, metadata,owner} = stages.pop().output
 
   if (verbose) {
     console.log('Config:')
     console.log({
       nodeUri,
-      aquariusUri: aquariusUrl || metadataUrl,
-      brizoUri: brizoUrl || accessProxyUrl,
-      secretStoreUri: secretStoreUrl || ssUrl,
-      brizoAddress: brizoAddress || bAddress,
+      aquariusUri: stages[0].output.metadataUrl,
+      brizoUri: stages[0].output.brizoUrl,
+      secretStoreUri: stages[0].output.secretStoreUrl,
+      brizoAddress: stages[0].output.brizoAddress,
     })
   }
 
   const ocean = await Ocean.getInstance({
     nodeUri,
-    aquariusUri: aquariusUrl || metadataUrl,
-    secretStoreUri: secretStoreUrl || ssUrl,
-    brizoUri: brizoUrl || accessProxyUrl,
-    brizoAddress: brizoAddress || bAddress,
+    aquariusUri: stages[0].output.metadataUrl,
+    brizoUri: stages[0].output.brizoUrl,
+    secretStoreUri: stages[0].output.secretStoreUrl,
+    brizoAddress: stages[0].output.brizoAddress,
     parityUri: nodeUri,
     threshold: 0,
     verbose,
     web3Provider: provider,
   })
-
+  if (verbose) {
+    console.log(await ocean.versions.get())
+    console.log("Done ocean dump")
+  }
   const publisher = new Account(publicKey, ocean.instanceConfig)
   publisher.setPassword(password)
 
-  // Read files
-  const getFiles = folder => new Promise(resolve => {
-      fs.readdir(folder, {withFileTypes: true}, (e, fileList) => {
-        resolve(
-          (fileList || [])
-            .filter(_ => _.isFile())
-            .map(({name}) => ({
-              name,
-              path: `${folder}/${name}`,
-              contentType: mime.lookup(name) || undefined,
-              contentLength: fs.statSync(`${folder}/${name}`).size,
-            }))
-        )
-      })
-    })
-
-  const files = await getFiles(outputsDir)
-  const logs = await getFiles(logsDir)
-
-  log('Files:', files)
-  log('Logs:', logs)
 
   // Upload files to S3
   AWS.config.update({region: 'eu-central-1'})
@@ -174,8 +179,9 @@ async function main({
       author: 'pod-publishing',
       license: 'No License Specified',
       price: '0',
+      type: "dataset",
       // Data from DDO
-      ...metadata,
+      ...stages[0].output.metadata,
       files: uploadedFiles,
     }
   }, publisher)
@@ -185,7 +191,7 @@ async function main({
   if (verbose) {
     log('Is provider:', await ocean.keeper.didRegistry.isDIDProvider(
         ddo.id,
-        brizoAddress || bAddress,
+        stages[0].output.brizoAddress,
     ))
     log('Attributes:', await ocean.keeper.didRegistry.getAttributesByDid(
         ddo.id,
