@@ -177,12 +177,16 @@ log('Logs:', logs)
       dateCreated: publishingDate,
       datePublished: publishingDate,
       author: 'pod-publishing',
+      name: 'output-dataset',
       license: 'No License Specified',
       price: '0',
       type: "dataset",
+      files: uploadedFiles,
+    },
+    additionalAttributes: {
       // Data from DDO
       ...stages[0].output.metadata,
-      files: uploadedFiles,
+      categories: []
     }
   }, publisher)
 
