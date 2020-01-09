@@ -19,10 +19,11 @@ program
   .option('--brizo <url>', 'Brizo URL')
   .option('--secretstore <url>', 'Secret Store URL')
   .option('--address <address>', 'Brizo address')
+  .option('--workflowid <workflowid>', 'Workflow id')
   .option('-v, --verbose', 'Enables verbose mode')
   .action(() => {
-    let {workflow, node, credentials, password, path, aquariusUrl, brizoUrl, secretStoreUrl, brizoAddress, verbose} = program
-    const config = {workflow, node, credentials, password, path, aquariusUrl, brizoUrl, secretStoreUrl, brizoAddress, verbose}
+    let {workflow, node, credentials, password, path, aquariusUrl, brizoUrl, secretStoreUrl, brizoAddress,workflowid, verbose} = program
+    const config = {workflow, node, credentials, password, path, aquariusUrl, brizoUrl, secretStoreUrl, brizoAddress,workflowid, verbose}
 
     main(config)
       .then(() => {
@@ -45,7 +46,8 @@ async function main({
   cbrizoUrl:brizoUrl,
   csecretStoreUrl:secretStoreUrl,
   cbrizoAddress:brizoAddress,
-  verbose,
+  workflowid,
+  verbose
 }) {
 
 
@@ -122,12 +124,13 @@ log('Logs:', logs)
   publisher.setPassword(password)
 
 
+
   // Upload files to S3
-  AWS.config.update({region: 'eu-central-1'})
+  AWS.config.update({region: 'us-east-1'})
 
   const s3 = new AWS.S3({apiVersion: '2006-03-01'})
 
-  const bucketName = `pod-publishing-test-${Math.floor(Math.random() * 10 ** 8)}`
+  /*const bucketName = `pod-publishing-test-${Math.floor(Math.random() * 10 ** 8)}`
   const newBucket = {
     Bucket: bucketName,
     ACL: 'public-read',
@@ -139,7 +142,8 @@ log('Logs:', logs)
   }))
 
   log('Bucket:', bucket)
-
+  */
+ const bucketName="compute-publish"
   // Uploading files
   const uploads = [...files, ...logs]
     .map(file => new Promise((resolve, reject) => {
@@ -155,8 +159,8 @@ log('Logs:', logs)
       fileStream.on('error', err => reject(err))
 
       uploadParams.Body = fileStream
-      uploadParams.Key = file.name
-
+      uploadParams.Key = workflowid+file.path
+      
       s3.upload(uploadParams, (err, data) => err ? reject(err) : resolve({...file, url: data.Location}))
     }))
   
