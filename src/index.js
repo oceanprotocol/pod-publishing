@@ -63,7 +63,7 @@ async function main({
   const log = (...args) => verbose ? console.log(...args) : undefined
   const {stages} = JSON.parse(fs.readFileSync(workflowPath).toString())
     
-
+log('Stages:',stages)
 
 
 var alloutputs=Array();
@@ -107,7 +107,7 @@ for (var i = 0; i < outputfiles.length; i++) {
                   break;
       case '/data/logs/algorithm.log': 
                   outputfiles[i]['column']='algologURL';
-                  if(stages[0].output.publishalgolog==true){
+                  if(stages[0].output.publishAlgorithmLog==true || stages[0].output.publishAlgorithmLog==1 || stages[0].output.publishAlgorithmLog=="1"){
                     outputfiles[i]['shouldpublish']=true;
                   }
                   else{
@@ -117,7 +117,7 @@ for (var i = 0; i < outputfiles.length; i++) {
                   break;
       default:    outputfiles[i]['column']=null;
                   outputfiles[i]['isoutput']=true
-                  if(stages[0].output.publishoutput==true){
+                  if(stages[0].output.publishOutput ==true || stages[0].output.publishOutput ==1 || stages[0].output.publishOutput =="1"){
                     outputfiles[i]['shouldpublish']=true;
                   }
                   else{
