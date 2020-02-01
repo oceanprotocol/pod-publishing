@@ -171,17 +171,17 @@ if(publishfiles.length>0){
         console.log('Config:')
         console.log({
             nodeUri:stages[0].output.nodeUri,
-            aquariusUri: stages[0].output.metadataUrl,
-            brizoUri: stages[0].output.brizoUrl,
-            secretStoreUri: stages[0].output.secretStoreUrl,
+            aquariusUri: stages[0].output.metadataUri,
+            brizoUri: stages[0].output.brizoUri,
+            secretStoreUri: stages[0].output.secretStoreUri,
             brizoAddress: stages[0].output.brizoAddress,
         })
       }
       const ocean = await Ocean.getInstance({
             nodeUri:stages[0].output.nodeUri,
-            aquariusUri: stages[0].output.metadataUrl,
-            brizoUri: stages[0].output.brizoUrl,
-            secretStoreUri: stages[0].output.secretStoreUrl,
+            aquariusUri: stages[0].output.metadataUri,
+            brizoUri: stages[0].output.brizoUri,
+            secretStoreUri: stages[0].output.secretStoreUri,
             brizoAddress: stages[0].output.brizoAddress,
             parityUri: stages[0].output.nodeUri,
             threshold: 0,
