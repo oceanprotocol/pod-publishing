@@ -130,6 +130,8 @@ async function main({
       /* eslint-disable-next-line */
       outputfiles[i].index = alloutputsindex
       alloutputsindex++
+    }
+    if (outputfiles[i].column === null && outputfiles[i].url != null) {
       alloutputs.push(outputfiles[i].url)
     }
     if (outputfiles[i].column != null) {
