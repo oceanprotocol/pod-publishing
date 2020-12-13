@@ -1,14 +1,11 @@
 #!/usr/bin/env node
 
 const program = require('commander')
-const web3 = require('web3')
-const { Ocean, Account } = require('@oceanprotocol/squid')
 const AWS = require('aws-sdk')
-const Wallet = require('ethereumjs-wallet')
-const PrivateKeyProvider = require('truffle-privatekey-provider')
 const mime = require('mime-types')
 const fs = require('fs')
 const pg = require('pg')
+const ipfsClient = require('ipfs-http-client')
 
 var pgpool = new pg.Pool({
   user: process.env.POSTGRES_USER,
@@ -164,119 +161,59 @@ async function main({
 
   if (publishfiles.length > 0) {
     // publish only if we have to
-    // Config
-    const credentialsWallet = Wallet.fromV3(credentials, password, true)
-    const publicKey = web3.utils.toChecksumAddress(
-      '0x' + credentialsWallet.getAddress().toString('hex')
-    )
-    const privateKey = credentialsWallet.getPrivateKey()
-    const provider = new PrivateKeyProvider(privateKey, stages[0].output.nodeUri)
-    // Config from stage output
-    if (verbose) {
-      console.log('Config:')
-      console.log({
-        nodeUri: stages[0].output.nodeUri,
-        aquariusUri: stages[0].output.metadataUri,
-        brizoUri: stages[0].output.brizoUri,
-        secretStoreUri: stages[0].output.secretStoreUri,
-        brizoAddress: stages[0].output.brizoAddress
-      })
-    }
-    const ocean = await Ocean.getInstance({
-      nodeUri: stages[0].output.nodeUri,
-      aquariusUri: stages[0].output.metadataUri,
-      brizoUri: stages[0].output.brizoUri,
-      secretStoreUri: stages[0].output.secretStoreUri,
-      brizoAddress: stages[0].output.brizoAddress,
-      parityUri: stages[0].output.nodeUri,
-      threshold: 0,
-      verbose,
-      web3Provider: provider
-    })
-    if (verbose) {
-      console.log(await ocean.versions.get())
-      console.log('Done ocean dump')
-    }
-    const publisher = new Account(publicKey, ocean.instanceConfig)
-    publisher.setPassword(password)
-
-    // Create asset
-    const publishingDate = new Date().toISOString().replace(/\.[0-9]{3}Z/, 'Z')
-    const originalddo = {
-      main: {
-        // Default metadata
-        dateCreated: publishingDate,
-        datePublished: publishingDate,
-        author: 'pod-publishing',
-        name: 'job-' + workflowid + '-output',
-        license: 'No License Specified',
-        price: '0',
-        type: 'dataset',
-        files: publishfiles,
-        ...stages[0].output.metadata.main
-      },
-      additionalAttributes: {
-        // Data from DDO
-        ...stages[0].output.metadata.additionalAttributes
-      }
-    }
-    log('Create this DDO:', originalddo)
-    const ddo = await ocean.assets.create(originalddo, publisher)
-    log('DDO:', ddo)
-    await updatecolumn('ddo', JSON.stringify(ddo), workflowid)
-    // TO DO - add whitelist
-    console.log('Whitelist')
-    console.log(stages[0].output.whitelist)
-    // TO DO - transfer onwership
-    console.log('Owner')
-    console.log(stages[0].output.owner)
-    if (stages[0].output.owner != null) {
-      try {
-        const result = await ocean.assets.transferOwnership(
-          ddo.id,
-          stages[0].output.owner
-        )
-        log('Transfer owership:', result)
-      } catch (e) {
-        log('Tramsfer ownership failed', e)
-      }
-    }
-
-    if (verbose) {
-      log(
-        'Is provider:',
-        await ocean.keeper.didRegistry.isDIDProvider(
-          ddo.id,
-          stages[0].output.brizoAddress
-        )
-      )
-      log('Attributes:', await ocean.keeper.didRegistry.getAttributesByDid(ddo.id))
-    }
-    console.log(ddo.id)
-  } // end publish to ocean
-  console.log('Everything is OK')
+  //console.log('Everything is OK')
+  }
 } // end main
 
 async function getdir(folder) {
   var retfiles = []
-  var files = await fs.readdirSync(folder, { withFileTypes: true })
-  for (var i = 0; i < files.length; i++) {
-    var file = files[i]
-    if (file.isFile()) {
-      var arr = []
-      arr.name = file.name
-      arr.path = folder + '/' + file.name
-      arr.contentType = mime.lookup(file.name) || undefined
-      arr.contentLength = String(fs.statSync(`${folder}/${file.name}`).size)
-      arr.isoutput = false
-      retfiles.push(arr)
+  try{
+    var files = await fs.readdirSync(folder, { withFileTypes: true })
+    for (var i = 0; i < files.length; i++) {
+      var file = files[i]
+      if (file.isFile()) {
+        var arr = []
+        arr.name = file.name
+        arr.path = folder + '/' + file.name
+        arr.contentType = mime.lookup(file.name) || undefined
+        arr.contentLength = String(fs.statSync(`${folder}/${file.name}`).size)
+        arr.isoutput = false
+        retfiles.push(arr)
+      }
     }
+  }
+  catch(e){
+    
   }
   return retfiles
 }
 
 async function uploadthisfile(filearr, workflowid) {
-  const url = await uploadtos3(filearr, workflowid)
+  let url
+  if(filearr.uploadadminzone){
+    if(process.env.IPFS_ADMINLOGS){
+      url = await uploadtoIPFS(filearr, workflowid, process.env.IPFS_ADMINLOGS)  
+    }
+    else if(process.env.AWS_BUCKET_ADMINLOGS){
+      url = await uploadtos3(filearr, workflowid, process.env.AWS_BUCKET_ADMINLOGS)
+    }
+    else{
+      console.error('No IPFS_ADMINLOGS and no AWS_BUCKET_ADMINLOGS. Upload failed')    
+      url = null
+    }
+  }
+  else{
+    if(process.env.IPFS_OUTPUT){
+      url = await uploadtoIPFS(filearr, workflowid, process.env.IPFS_OUTPUT)
+    }
+    else if(process.env.AWS_BUCKET_OUTPUT){
+      url = await uploadtos3(filearr, workflowid, process.env.AWS_BUCKET_OUTPUT)
+    }
+    else{
+      console.error('No IPFS_OUTPUT and no AWS_BUCKET_OUTPUT. Upload failed')    
+      url = null
+    }
+  }
   console.log('Got ' + url + '')
   return url
 }
@@ -295,10 +232,8 @@ async function updatecolumn(column, value, workflowid) {
   }
 }
 
-async function uploadtos3(filearr, workflowid) {
+async function uploadtos3(filearr, workflowid, bucketName) {
   let bucketName
-  if (filearr.uploadadminzone === true) bucketName = process.env.AWS_BUCKET_ADMINLOGS
-  else bucketName = process.env.AWS_BUCKET_OUTPUT
   const s3 = new AWS.S3({ apiVersion: '2006-03-01' })
   const uploadParams = {
     Bucket: bucketName,
@@ -306,17 +241,34 @@ async function uploadtos3(filearr, workflowid) {
     Body: '',
     ACL: 'public-read'
   }
-  const fileStream = fs.createReadStream(filearr.path)
-  // TO DO - check for null
-  uploadParams.Body = fileStream
-  uploadParams.Key = workflowid + filearr.path
   try {
+    const fileStream = fs.createReadStream(filearr.path)
+    uploadParams.Body = fileStream
+    uploadParams.Key = workflowid + filearr.path
     console.log("uploading:")
     console.log(uploadParams)
     const putObjectPromise = await s3.upload(uploadParams).promise()
     const location = putObjectPromise.Location
     return location
   } catch (e) {
+    return null
+  }
+}
+
+
+async function uploadtoIPFS(filearr, workflowid, ipfsURL){
+  console.log("Publishing to IPFS")
+  console.log(filearr)
+  try{
+    const ipfs = ipfsClient(ipfsURL)
+    let fileStream = fs.createReadStream(filearr.path)
+    const filesAdded = await ipfs.add(fileStream);
+    console.log(filesAdded);
+    const fileHash = filesAdded.cid.string;
+    return(ipfsURL+"/ipfs/"+fileHash)
+  }
+  catch(e){
+    console.error(e)
     return null
   }
 }

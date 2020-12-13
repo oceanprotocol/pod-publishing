@@ -18,22 +18,18 @@
   },
   "peerDependencies": {},
   "dependencies": {
-    "@oceanprotocol/keeper-contracts": "^0.13.1",
-    "@oceanprotocol/squid": "^1.1.0-beta.0",
     "aws-sdk": "^2.501.0",
     "commander": "^2.20.0",
-    "ethereumjs-wallet": "^0.6.3",
+    "ipfs-http-client": "^48.1.2",
     "mime-types": "^2.1.24",
     "pg": "^7.17.1",
-    "pg-pool": "^2.0.9",
-    "web3": "^1.2.1"
+    "pg-pool": "^2.0.9"
   },
   "devDependencies": {
     "eslint": "^6.7.2",
     "eslint-config-oceanprotocol": "^1.5.0",
     "eslint-config-prettier": "^6.7.0",
     "eslint-plugin-prettier": "^3.1.2",
-    "prettier": "^1.19.1",
-    "truffle-privatekey-provider": "^1.3.0"
+    "prettier": "^1.19.1"
   }
 }
