@@ -233,7 +233,6 @@ async function updatecolumn(column, value, workflowid) {
 }
 
 async function uploadtos3(filearr, workflowid, bucketName) {
-  let bucketName
   const s3 = new AWS.S3({ apiVersion: '2006-03-01' })
   const uploadParams = {
     Bucket: bucketName,
