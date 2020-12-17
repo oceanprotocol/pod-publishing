@@ -192,7 +192,7 @@ async function uploadthisfile(filearr, workflowid) {
   let url
   if(filearr.uploadadminzone){
     if(process.env.IPFS_ADMINLOGS){
-      url = await uploadtoIPFS(filearr, workflowid, process.env.IPFS_ADMINLOGS)  
+      url = await uploadtoIPFS(filearr, workflowid, process.env.IPFS_ADMINLOGS, process.env.IPFS_ADMINLOGS_PREFIX)  
     }
     else if(process.env.AWS_BUCKET_ADMINLOGS){
       url = await uploadtos3(filearr, workflowid, process.env.AWS_BUCKET_ADMINLOGS)
@@ -204,7 +204,7 @@ async function uploadthisfile(filearr, workflowid) {
   }
   else{
     if(process.env.IPFS_OUTPUT){
-      url = await uploadtoIPFS(filearr, workflowid, process.env.IPFS_OUTPUT)
+      url = await uploadtoIPFS(filearr, workflowid, process.env.IPFS_OUTPUT, process.env.IPFS_OUTPUT_PREFIX)
     }
     else if(process.env.AWS_BUCKET_OUTPUT){
       url = await uploadtos3(filearr, workflowid, process.env.AWS_BUCKET_OUTPUT)
@@ -255,7 +255,7 @@ async function uploadtos3(filearr, workflowid, bucketName) {
 }
 
 
-async function uploadtoIPFS(filearr, workflowid, ipfsURL){
+async function uploadtoIPFS(filearr, workflowid, ipfsURL, ipfsURLPrefix){
   console.log("Publishing to IPFS")
   console.log(filearr)
   try{
@@ -264,7 +264,10 @@ async function uploadtoIPFS(filearr, workflowid, ipfsURL){
     const filesAdded = await ipfs.add(fileStream);
     console.log(filesAdded);
     const fileHash = filesAdded.cid.string;
-    return(ipfsURL+"/ipfs/"+fileHash)
+    if(ipfsURLPrefix)
+      return(ipfsURLPrefix+fileHash)
+    else
+      return(ipfsURL+"/ipfs/"+fileHash)
   }
   catch(e){
     console.error(e)
