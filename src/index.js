@@ -275,7 +275,7 @@ async function uploadtoIPFS(filearr, workflowid, ipfsURL, ipfsURLPrefix){
     for await (const ipfsFile of filesAdded) {
       // The last path will contain the directory hash
       if (ipfsFile.path === '') {
-        fileHash = `${ipfsFile.cid.toString()}/${file.name}`
+        fileHash = `${ipfsFile.cid.toString()}/${filearr.name}`
       }
     }
     console.log(filesAdded);
