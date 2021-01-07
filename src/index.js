@@ -271,14 +271,10 @@ async function uploadtoIPFS(filearr, workflowid, ipfsURL, ipfsURLPrefix){
       wrapWithDirectory: true
       // progress: (prog: number) => console.log(`received: ${prog}`)
     });
-    let fileHash=''
-    for await (const ipfsFile of filesAdded) {
-      // The last path will contain the directory hash
-      if (ipfsFile.path === '') {
-        fileHash = `${ipfsFile.cid.toString()}/${filearr.name}`
-      }
-    }
-    console.log(filesAdded);
+    console.log("------------------------------------")
+    console.log(filesAdded)
+    console.log("------------------------------------")
+    fileHash = `${filesAdded.cid.toString()}/${filearr.name}`
     if(ipfsURLPrefix)
       return(ipfsURLPrefix+fileHash)
     else
