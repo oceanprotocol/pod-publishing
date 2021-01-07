@@ -274,7 +274,7 @@ async function uploadtoIPFS(filearr, workflowid, ipfsURL, ipfsURLPrefix){
     console.log("------------------------------------")
     console.log(filesAdded)
     console.log("------------------------------------")
-    fileHash = `${filesAdded.cid.toString()}/${filearr.name}`
+    fileHash = `${filesAdded.cid.toString()}/${filearr.path}`
     if(ipfsURLPrefix)
       return(ipfsURLPrefix+fileHash)
     else
