@@ -136,16 +136,13 @@ async function main({
     }
   }
 
-  log('alloutputs:', alloutputs)
   await updatecolumn('outputsURL', JSON.stringify(alloutputs), workflowid)
 
-  log('outputfiles:', outputfiles)
-
+  
   console.log('=======================')
   const publishfiles = outputfiles
     .filter(val => {
       var x = val.shouldpublish
-      console.log(x)
       return x
     })
     .map(({ url, name, contentLength, contentType, index }) => ({
@@ -161,13 +158,13 @@ async function main({
 
   if (publishfiles.length > 0) {
     // publish only if we have to
-  //console.log('Everything is OK')
+    //console.log('Everything is OK')
   }
 } // end main
 
 async function getdir(folder) {
   var retfiles = []
-  try{
+  try {
     var files = await fs.readdirSync(folder, { withFileTypes: true })
     for (var i = 0; i < files.length; i++) {
       var file = files[i]
@@ -182,35 +179,36 @@ async function getdir(folder) {
       }
     }
   }
-  catch(e){
-    
+  catch (e) {
+
   }
   return retfiles
 }
 
 async function uploadthisfile(filearr, workflowid) {
   let url
-  if(filearr.uploadadminzone){
-    if(process.env.IPFS_ADMINLOGS){
-      url = await uploadtoIPFS(filearr, workflowid, process.env.IPFS_ADMINLOGS, process.env.IPFS_ADMINLOGS_PREFIX)  
+  if (filearr.uploadadminzone) {
+    if (process.env.IPFS_ADMINLOGS) {
+
+      url = await uploadtoIPFS(filearr, workflowid, process.env.IPFS_ADMINLOGS, process.env.IPFS_ADMINLOGS_PREFIX, process.env.IPFS_EXPIRY_TIME)
     }
-    else if(process.env.AWS_BUCKET_ADMINLOGS){
+    else if (process.env.AWS_BUCKET_ADMINLOGS) {
       url = await uploadtos3(filearr, workflowid, process.env.AWS_BUCKET_ADMINLOGS)
     }
-    else{
-      console.error('No IPFS_ADMINLOGS and no AWS_BUCKET_ADMINLOGS. Upload failed')    
+    else {
+      console.error('No IPFS_ADMINLOGS and no AWS_BUCKET_ADMINLOGS. Upload failed')
       url = null
     }
   }
-  else{
-    if(process.env.IPFS_OUTPUT){
-      url = await uploadtoIPFS(filearr, workflowid, process.env.IPFS_OUTPUT, process.env.IPFS_OUTPUT_PREFIX)
+  else {
+    if (process.env.IPFS_OUTPUT) {
+      url = await uploadtoIPFS(filearr, workflowid, process.env.IPFS_OUTPUT, process.env.IPFS_OUTPUT_PREFIX, process.env.IPFS_EXPIRY_TIME)
     }
-    else if(process.env.AWS_BUCKET_OUTPUT){
+    else if (process.env.AWS_BUCKET_OUTPUT) {
       url = await uploadtos3(filearr, workflowid, process.env.AWS_BUCKET_OUTPUT)
     }
-    else{
-      console.error('No IPFS_OUTPUT and no AWS_BUCKET_OUTPUT. Upload failed')    
+    else {
+      console.error('No IPFS_OUTPUT and no AWS_BUCKET_OUTPUT. Upload failed')
       url = null
     }
   }
@@ -255,32 +253,44 @@ async function uploadtos3(filearr, workflowid, bucketName) {
 }
 
 
-async function uploadtoIPFS(filearr, workflowid, ipfsURL, ipfsURLPrefix){
-  console.log("Publishing to IPFS")
-  console.log(filearr)
-  try{
+async function uploadtoIPFS(filearr, workflowid, ipfsURL, ipfsURLPrefix, expiry) {
+  console.log("Publishing to IPFS with options:")
+  try {
     const ipfs = ipfsClient(ipfsURL)
     let fileStream = fs.createReadStream(filearr.path)
-    let fileDetails ={
+    let fileDetails = {
       path: filearr.path,
       content: fileStream,
     }
-    const filesAdded = await ipfs.add(fileDetails, {
-      // wrap with a directory to preserve file name
-      // so we end up with ipfs://HASH/file.pdf
-      wrapWithDirectory: true
-      // progress: (prog: number) => console.log(`received: ${prog}`)
-    });
-    console.log("------------------------------------")
+    let options
+    if (parseInt(expiry) > 0) {
+      options = {
+        // wrap with a directory to preserve file name
+        // so we end up with ipfs://HASH/file.pdf
+        wrapWithDirectory: true,
+        // progress: (prog: number) => console.log(`received: ${prog}`)
+        expiry
+      }
+    }
+    else {
+      options = {
+        // wrap with a directory to preserve file name
+        // so we end up with ipfs://HASH/file.pdf
+        wrapWithDirectory: true
+      }
+    }
+    console.log(options)
+    const filesAdded = await ipfs.add(fileDetails, options);
+    console.log("---------Got---------------------------")
     console.log(filesAdded)
     console.log("------------------------------------")
     fileHash = `${filesAdded.cid.toString()}/${filearr.path}`
-    if(ipfsURLPrefix)
-      return(ipfsURLPrefix+fileHash)
+    if (ipfsURLPrefix)
+      return (ipfsURLPrefix + fileHash)
     else
-      return(ipfsURL+"/ipfs/"+fileHash)
+      return (ipfsURL + "/ipfs/" + fileHash)
   }
-  catch(e){
+  catch (e) {
     console.error(e)
     return null
   }
