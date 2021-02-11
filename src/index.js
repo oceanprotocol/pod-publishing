@@ -264,13 +264,9 @@ async function uploadtoIPFS(filearr, workflowid, ipfsURL, ipfsURLPrefix, expiry)
     }
     let options
     if (parseInt(expiry) > 0) {
-      options = {
-        // wrap with a directory to preserve file name
-        // so we end up with ipfs://HASH/file.pdf
-        wrapWithDirectory: true,
-        // progress: (prog: number) => console.log(`received: ${prog}`)
-        expiry
-      }
+      options = Object()
+      options['wrapWithDirectory'] = true
+      options['expire-in'] = expiry
     }
     else {
       options = {
