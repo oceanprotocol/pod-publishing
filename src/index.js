@@ -263,7 +263,7 @@ async function uploadtoIPFS(filearr, workflowid, ipfsURL, ipfsURLPrefix, expiry)
       content: fileStream,
     }
     let options
-    if (parseInt(expiry) > 0) {
+    if (expiry) {
       options = Object()
       options['wrapWithDirectory'] = true
       options['expire-in'] = expiry
