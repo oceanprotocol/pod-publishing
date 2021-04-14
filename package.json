@@ -20,10 +20,12 @@
   "dependencies": {
     "aws-sdk": "^2.501.0",
     "commander": "^2.20.0",
+    "ipfs-cluster-api": "0.0.9",
     "ipfs-http-client": "^48.1.2",
     "mime-types": "^2.1.24",
     "pg": "^7.17.1",
-    "pg-pool": "^2.0.9"
+    "pg-pool": "^2.0.9",
+    "release-it": "^14.6.1"
   },
   "devDependencies": {
     "eslint": "^6.7.2",
