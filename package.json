@@ -1,6 +1,6 @@
 {
   "name": "pod-publishing",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "pod-publishing",
   "scripts": {
     "start": "node src/index.js --workflow \"./samples/workflow.json\" --credentials \"$(cat ~/projects/ocean/barge/networks/spree/keys/account1.json)\" --password secret --outputs /tmp/pod-publishing/ --verbose",
