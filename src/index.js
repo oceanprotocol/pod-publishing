@@ -138,7 +138,7 @@ async function main({
 
   await updatecolumn('outputsURL', JSON.stringify(alloutputs), workflowid)
 
-  
+
   console.log('=======================')
   const publishfiles = outputfiles
     .filter(val => {
@@ -189,8 +189,15 @@ async function uploadthisfile(filearr, workflowid) {
   let url
   if (filearr.uploadadminzone) {
     if (process.env.IPFS_ADMINLOGS) {
-
-      url = await uploadtoIPFS(filearr, workflowid, process.env.IPFS_ADMINLOGS, process.env.IPFS_ADMINLOGS_PREFIX, process.env.IPFS_EXPIRY_TIME)
+      url = await uploadtoIPFS(
+        filearr,
+        workflowid,
+        process.env.IPFS_ADMINLOGS,
+        process.env.IPFS_ADMINLOGS_PREFIX,
+        process.env.IPFS_EXPIRY_TIME,
+        process.env.IPFS_API_KEY,
+        process.env.IPFS_API_CLIENT
+      )
     }
     else if (process.env.AWS_BUCKET_ADMINLOGS) {
       url = await uploadtos3(filearr, workflowid, process.env.AWS_BUCKET_ADMINLOGS)
@@ -202,7 +209,15 @@ async function uploadthisfile(filearr, workflowid) {
   }
   else {
     if (process.env.IPFS_OUTPUT) {
-      url = await uploadtoIPFS(filearr, workflowid, process.env.IPFS_OUTPUT, process.env.IPFS_OUTPUT_PREFIX, process.env.IPFS_EXPIRY_TIME)
+      url = await uploadtoIPFS(
+        filearr,
+        workflowid,
+        process.env.IPFS_OUTPUT,
+        process.env.IPFS_OUTPUT_PREFIX,
+        process.env.IPFS_EXPIRY_TIME,
+        process.env.IPFS_API_KEY,
+        process.env.IPFS_API_CLIENT
+      )
     }
     else if (process.env.AWS_BUCKET_OUTPUT) {
       url = await uploadtos3(filearr, workflowid, process.env.AWS_BUCKET_OUTPUT)
@@ -252,16 +267,33 @@ async function uploadtos3(filearr, workflowid, bucketName) {
   }
 }
 
-
-async function uploadtoIPFS(filearr, workflowid, ipfsURL, ipfsURLPrefix, expiry) {
+async function uploadtoIPFS(
+  filearr,
+  workflowid,
+  ipfsURL,
+  ipfsURLPrefix,
+  expiry,
+  ipfsApiKey,
+  ipfsApiClient
+) {
   console.log("Publishing to IPFS with options:")
+
   try {
-    const ipfs = ipfsClient(ipfsURL)
+    var headers = {}
+    if (ipfsApiKey) {
+      headers['X-API-KEY'] = ipfsApiKey
+    }
+    if (ipfsApiClient) {
+      headers['CLIENT-ID'] = ipfsApiClient
+    }
+    const ipfs = ipfsClient({ url: ipfsURL, headers: headers })
+
     let fileStream = fs.createReadStream(filearr.path)
     let fileDetails = {
       path: filearr.path,
       content: fileStream,
     }
+
     let options
     if (expiry) {
       options = Object()
