@@ -5,6 +5,7 @@ const AWS = require('aws-sdk')
 const mime = require('mime-types')
 const fs = require('fs')
 const pg = require('pg')
+const myPath = require('path')
 const ipfsClient = require('ipfs-http-client')
 
 var pgpool = new pg.Pool({
@@ -119,7 +120,6 @@ async function main({
         }
         break
     }
-    // log("Calling publish with",outputfiles[i])
     const uploadUrl = await uploadthisfile(outputfiles[i], workflowid)
     /* eslint-disable-next-line */
     outputfiles[i].url = uploadUrl
@@ -128,10 +128,19 @@ async function main({
       outputfiles[i].index = alloutputsindex
       alloutputsindex++
     }
-    if (outputfiles[i].column === null && outputfiles[i].url != null) {
-      alloutputs.push(outputfiles[i].url)
+    if ((outputfiles[i].column === null || outputfiles[i].column === 'algologURL') && outputfiles[i].url != null) {
+      const statsObj = fs.statSync(outputfiles[i].path)
+      const filename = myPath.basename(outputfiles[i].path)
+      const output = {
+        filename,
+        filesize: statsObj.size,
+        url: outputfiles[i].url,
+        type: outputfiles[i].column === 'algologURL' ? 'algorithmLog' : 'output'
+      }
+      alloutputs.push(output)
     }
-    if (outputfiles[i].column != null) {
+    if (outputfiles[i].column != null && outputfiles[i].column !== 'algologURL') {
+      // update special columns for configure/filter/publish logs
       await updatecolumn(outputfiles[i].column, outputfiles[i].url, workflowid)
     }
   }
