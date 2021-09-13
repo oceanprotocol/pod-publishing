@@ -282,7 +282,10 @@ async function uploadtoIPFS(filearr, workflowid, ipfsURL, ipfsURLPrefix, expiry,
     if (expiry) {
       options = Object()
       options['wrapWithDirectory'] = true
-      options['expire-in'] = expiry
+      /* (see https://github.com/ipfs/ipfs-cluster/blob/dbca14e83295158558234e867477ce07a523b81b/CHANGELOG.md#rest-api-2_)
+      Since IPFS expects value in Go's time format, i.e. 12h, we are going to divide the expiry to 60 and round it up
+      */
+      options['expire-in'] = Math.ceil(int(expiry)/60)
     }
     else {
       options = {
