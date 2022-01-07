@@ -5,6 +5,7 @@ const AWS = require('aws-sdk')
 const mime = require('mime-types')
 const fs = require('fs')
 const pg = require('pg')
+const myPath = require('path')
 const ipfsClient = require('ipfs-http-client')
 
 var pgpool = new pg.Pool({
@@ -119,7 +120,6 @@ async function main({
         }
         break
     }
-    // log("Calling publish with",outputfiles[i])
     const uploadUrl = await uploadthisfile(outputfiles[i], workflowid)
     /* eslint-disable-next-line */
     outputfiles[i].url = uploadUrl
@@ -128,10 +128,19 @@ async function main({
       outputfiles[i].index = alloutputsindex
       alloutputsindex++
     }
-    if (outputfiles[i].column === null && outputfiles[i].url != null) {
-      alloutputs.push(outputfiles[i].url)
+    if ((outputfiles[i].column === null || outputfiles[i].column === 'algologURL') && outputfiles[i].url != null) {
+      const statsObj = fs.statSync(outputfiles[i].path)
+      const filename = myPath.basename(outputfiles[i].path)
+      const output = {
+        filename,
+        filesize: statsObj.size,
+        url: outputfiles[i].url,
+        type: outputfiles[i].column === 'algologURL' ? 'algorithmLog' : 'output'
+      }
+      alloutputs.push(output)
     }
-    if (outputfiles[i].column != null) {
+    if (outputfiles[i].column != null && outputfiles[i].column !== 'algologURL') {
+      // update special columns for configure/filter/publish logs
       await updatecolumn(outputfiles[i].column, outputfiles[i].url, workflowid)
     }
   }
@@ -279,7 +288,7 @@ async function uploadtoIPFS(
   console.log("Publishing to IPFS with options:")
 
   try {
-    var headers = {}
+    let headers = {}
     if (ipfsApiKey) {
       headers['X-API-KEY'] = ipfsApiKey
     }
@@ -287,7 +296,6 @@ async function uploadtoIPFS(
       headers['CLIENT-ID'] = ipfsApiClient
     }
     const ipfs = ipfsClient({ url: ipfsURL, headers: headers })
-
     let fileStream = fs.createReadStream(filearr.path)
     let fileDetails = {
       path: filearr.path,
@@ -298,7 +306,10 @@ async function uploadtoIPFS(
     if (expiry) {
       options = Object()
       options['wrapWithDirectory'] = true
-      options['expire-in'] = expiry
+      /* (see https://github.com/ipfs/ipfs-cluster/blob/dbca14e83295158558234e867477ce07a523b81b/CHANGELOG.md#rest-api-2_)
+      Since IPFS expects value in Go's time format, i.e. 12h, we are going to divide the expiry to 60 and round it up
+      */
+      options['expire-in'] = Math.ceil(int(expiry)/60)
     }
     else {
       options = {
