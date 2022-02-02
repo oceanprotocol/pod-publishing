@@ -128,14 +128,22 @@ async function main({
       outputfiles[i].index = alloutputsindex
       alloutputsindex++
     }
-    if ((outputfiles[i].column === null || outputfiles[i].column === 'algologURL') && outputfiles[i].url != null) {
+    if (outputfiles[i].url != null) {
       const statsObj = fs.statSync(outputfiles[i].path)
       const filename = myPath.basename(outputfiles[i].path)
+      let type
+      switch(outputfiles[i].column){
+          case 'algologURL': type = "algorithmLog"; break;
+          case 'publishlogURL': type = "publishLog"; break;
+          case 'configlogURL': type = "configrationLog"; break;
+          default:  type = "output";
+      }
+
       const output = {
         filename,
         filesize: statsObj.size,
         url: outputfiles[i].url,
-        type: outputfiles[i].column === 'algologURL' ? 'algorithmLog' : 'output'
+        type: type
       }
       alloutputs.push(output)
     }
