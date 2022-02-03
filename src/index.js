@@ -76,107 +76,42 @@ async function main({
   // Do processing on the array and add options to each file
   var alloutputsindex = 0
   for (var i = 0; i < outputfiles.length; i++) {
-    switch (outputfiles[i].path) {
-      case '/data/adminlogs/configure.log':
-        outputfiles[i].column = 'configlogURL'
-        outputfiles[i].shouldpublish = false
-        outputfiles[i].uploadadminzone = true
-        break
-      case '/data/adminlogs/filter.log':
-        outputfiles[i].column = null
-        outputfiles[i].shouldpublish = false
-        outputfiles[i].uploadadminzone = true
-        break
-      case '/data/adminlogs/publish.log':
-        outputfiles[i].column = 'publishlogURL'
-        outputfiles[i].shouldpublish = false
-        outputfiles[i].uploadadminzone = true
-        break
-      case '/data/logs/algorithm.log':
-        outputfiles[i].column = 'algologURL'
-        if (
-          stages[0].output.publishAlgorithmLog === true ||
-          stages[0].output.publishAlgorithmLog === 1 ||
-          stages[0].output.publishAlgorithmLog === '1'
-        ) {
-          outputfiles[i].shouldpublish = true
-        } else {
-          outputfiles[i].shouldpublish = false
-          outputfiles[i].uploadadminzone = false
-        }
-        break
-      default:
-        outputfiles[i].column = null
-        outputfiles[i].isoutput = true
-        if (
-          stages[0].output.publishOutput === true ||
-          stages[0].output.publishOutput === 1 ||
-          stages[0].output.publishOutput === '1'
-        ) {
-          outputfiles[i].shouldpublish = true
-        } else {
-          outputfiles[i].shouldpublish = false
-          outputfiles[i].uploadadminzone = false
-        }
-        break
-    }
     const uploadUrl = await uploadthisfile(outputfiles[i], workflowid)
-    /* eslint-disable-next-line */
-    outputfiles[i].url = uploadUrl
-    if (outputfiles[i].shouldpublish === true && outputfiles[i].url != null) {
-      /* eslint-disable-next-line */
+    if (uploadUrl) {
+      outputfiles[i].url = uploadUrl
+      switch (outputfiles[i].path) {
+        case '/data/adminlogs/configure.log':
+          outputfiles[i].type = "configrationLog"
+          break
+        case '/data/adminlogs/filter.log':
+          outputfiles[i].type = "filteringLog"
+          break
+        case '/data/adminlogs/publish.log':
+          outputfiles[i].type = "publishLog"
+          break
+        case '/data/logs/algorithm.log':
+          outputfiles[i].type = "algorithmLog";
+          break
+        default:
+          outputfiles[i].type = "output"
+      }
       outputfiles[i].index = alloutputsindex
       alloutputsindex++
-    }
-    if (outputfiles[i].url != null) {
+
       const statsObj = fs.statSync(outputfiles[i].path)
       const filename = myPath.basename(outputfiles[i].path)
-      let type
-      switch(outputfiles[i].column){
-          case 'algologURL': type = "algorithmLog"; break;
-          case 'publishlogURL': type = "publishLog"; break;
-          case 'configlogURL': type = "configrationLog"; break;
-          default:  type = "output";
-      }
-
       const output = {
         filename,
         filesize: statsObj.size,
         url: outputfiles[i].url,
-        type: type
+        type: outputfiles[i].type
       }
       alloutputs.push(output)
-    }
-    if (outputfiles[i].column != null && outputfiles[i].column !== 'algologURL') {
-      // update special columns for configure/filter/publish logs
-      await updatecolumn(outputfiles[i].column, outputfiles[i].url, workflowid)
     }
   }
 
   await updatecolumn('outputsURL', JSON.stringify(alloutputs), workflowid)
-
-
   console.log('=======================')
-  const publishfiles = outputfiles
-    .filter(val => {
-      var x = val.shouldpublish
-      return x
-    })
-    .map(({ url, name, contentLength, contentType, index }) => ({
-      url,
-      name,
-      contentLength,
-      contentType,
-      index
-    }))
-
-  console.log('=======================')
-  log('Publish files:', publishfiles)
-
-  if (publishfiles.length > 0) {
-    // publish only if we have to
-    //console.log('Everything is OK')
-  }
 } // end main
 
 async function getdir(folder) {
@@ -204,46 +139,25 @@ async function getdir(folder) {
 
 async function uploadthisfile(filearr, workflowid) {
   let url
-  if (filearr.uploadadminzone) {
-    if (process.env.IPFS_ADMINLOGS) {
-      url = await uploadtoIPFS(
-        filearr,
-        workflowid,
-        process.env.IPFS_ADMINLOGS,
-        process.env.IPFS_ADMINLOGS_PREFIX,
-        process.env.IPFS_EXPIRY_TIME,
-        process.env.IPFS_API_KEY,
-        process.env.IPFS_API_CLIENT
-      )
-    }
-    else if (process.env.AWS_BUCKET_ADMINLOGS) {
-      url = await uploadtos3(filearr, workflowid, process.env.AWS_BUCKET_ADMINLOGS)
-    }
-    else {
-      console.error('No IPFS_ADMINLOGS and no AWS_BUCKET_ADMINLOGS. Upload failed')
-      url = null
-    }
+  if (process.env.IPFS_OUTPUT) {
+    url = await uploadtoIPFS(
+      filearr,
+      workflowid,
+      process.env.IPFS_OUTPUT,
+      process.env.IPFS_OUTPUT_PREFIX,
+      process.env.IPFS_EXPIRY_TIME,
+      process.env.IPFS_API_KEY,
+      process.env.IPFS_API_CLIENT
+    )
+  }
+  else if (process.env.AWS_BUCKET_OUTPUT) {
+    url = await uploadtos3(filearr, workflowid, process.env.AWS_BUCKET_OUTPUT)
   }
   else {
-    if (process.env.IPFS_OUTPUT) {
-      url = await uploadtoIPFS(
-        filearr,
-        workflowid,
-        process.env.IPFS_OUTPUT,
-        process.env.IPFS_OUTPUT_PREFIX,
-        process.env.IPFS_EXPIRY_TIME,
-        process.env.IPFS_API_KEY,
-        process.env.IPFS_API_CLIENT
-      )
-    }
-    else if (process.env.AWS_BUCKET_OUTPUT) {
-      url = await uploadtos3(filearr, workflowid, process.env.AWS_BUCKET_OUTPUT)
-    }
-    else {
-      console.error('No IPFS_OUTPUT and no AWS_BUCKET_OUTPUT. Upload failed')
-      url = null
-    }
+    console.error('No IPFS_OUTPUT and no AWS_BUCKET_OUTPUT. Upload failed')
+    url = null
   }
+
   console.log('Got ' + url + '')
   return url
 }
@@ -317,7 +231,7 @@ async function uploadtoIPFS(
       /* (see https://github.com/ipfs/ipfs-cluster/blob/dbca14e83295158558234e867477ce07a523b81b/CHANGELOG.md#rest-api-2_)
       Since IPFS expects value in Go's time format, i.e. 12h, we are going to divide the expiry to 60 and round it up
       */
-      options['expire-in'] = Math.ceil(int(expiry)/60)
+      options['expire-in'] = Math.ceil(int(expiry) / 60)
     }
     else {
       options = {
