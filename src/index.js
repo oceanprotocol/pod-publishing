@@ -246,8 +246,12 @@ async function uploadtoIPFS(
     console.log(filesAdded)
     console.log("------------------------------------")
     fileHash = `${filesAdded.cid.toString()}/${filearr.path}`
-    if (ipfsURLPrefix)
-      return (ipfsURLPrefix + fileHash)
+    if (ipfsURLPrefix){
+      if(ipfsURLPrefix.endsWith('/'))
+        return (ipfsURLPrefix + fileHash)
+      else
+      return (ipfsURLPrefix + '/'+ fileHash)
+    }
     else
       return (ipfsURL + "/ipfs/" + fileHash)
   }
