@@ -81,19 +81,19 @@ async function main({
       outputfiles[i].url = uploadUrl
       switch (outputfiles[i].path) {
         case '/data/adminlogs/configure.log':
-          outputfiles[i].type = "configrationLog"
+          outputfiles[i].type = 'configrationLog'
           break
         case '/data/adminlogs/filter.log':
-          outputfiles[i].type = "filteringLog"
+          outputfiles[i].type = 'filteringLog'
           break
         case '/data/adminlogs/publish.log':
-          outputfiles[i].type = "publishLog"
+          outputfiles[i].type = 'publishLog'
           break
         case '/data/logs/algorithm.log':
-          outputfiles[i].type = "algorithmLog";
+          outputfiles[i].type = 'algorithmLog'
           break
         default:
-          outputfiles[i].type = "output"
+          outputfiles[i].type = 'output'
       }
       outputfiles[i].index = alloutputsindex
       alloutputsindex++
@@ -130,9 +130,8 @@ async function getdir(folder) {
         retfiles.push(arr)
       }
     }
-  }
-  catch (e) {
-
+  } catch (e) {
+    console.log('Dir parse failed')
   }
   return retfiles
 }
@@ -149,11 +148,9 @@ async function uploadthisfile(filearr, workflowid) {
       process.env.IPFS_API_KEY,
       process.env.IPFS_API_CLIENT
     )
-  }
-  else if (process.env.AWS_BUCKET_OUTPUT) {
+  } else if (process.env.AWS_BUCKET_OUTPUT) {
     url = await uploadtos3(filearr, workflowid, process.env.AWS_BUCKET_OUTPUT)
-  }
-  else {
+  } else {
     console.error('No IPFS_OUTPUT and no AWS_BUCKET_OUTPUT. Upload failed')
     url = null
   }
@@ -188,7 +185,7 @@ async function uploadtos3(filearr, workflowid, bucketName) {
     const fileStream = fs.createReadStream(filearr.path)
     uploadParams.Body = fileStream
     uploadParams.Key = workflowid + filearr.path
-    console.log("uploading:")
+    console.log('uploading:')
     console.log(uploadParams)
     const putObjectPromise = await s3.upload(uploadParams).promise()
     const location = putObjectPromise.Location
@@ -207,10 +204,10 @@ async function uploadtoIPFS(
   ipfsApiKey,
   ipfsApiClient
 ) {
-  console.log("Publishing to IPFS with options:")
+  console.log('Publishing to IPFS with options:')
 
   try {
-    let headers = {}
+    const headers = {}
     if (ipfsApiKey) {
       headers['X-API-KEY'] = ipfsApiKey
     }
@@ -218,22 +215,21 @@ async function uploadtoIPFS(
       headers['CLIENT-ID'] = ipfsApiClient
     }
     const ipfs = ipfsClient({ url: ipfsURL, headers: headers })
-    let fileStream = fs.createReadStream(filearr.path)
-    let fileDetails = {
+    const fileStream = fs.createReadStream(filearr.path)
+    const fileDetails = {
       path: filearr.path,
-      content: fileStream,
+      content: fileStream
     }
 
     let options
     if (expiry) {
       options = Object()
-      options['wrapWithDirectory'] = true
+      options.wrapWithDirectory = true
       /* (see https://github.com/ipfs/ipfs-cluster/blob/dbca14e83295158558234e867477ce07a523b81b/CHANGELOG.md#rest-api-2_)
       Since IPFS expects value in Go's time format, i.e. 12h, we are going to divide the expiry to 60 and round it up
       */
-      options['expire-in'] = Math.ceil(int(expiry) / 60)
-    }
-    else {
+      options['expire-in'] = Math.ceil(parseInt(expiry) / 60)
+    } else {
       options = {
         // wrap with a directory to preserve file name
         // so we end up with ipfs://HASH/file.pdf
@@ -241,21 +237,16 @@ async function uploadtoIPFS(
       }
     }
     console.log(options)
-    const filesAdded = await ipfs.add(fileDetails, options);
-    console.log("---------Got---------------------------")
+    const filesAdded = await ipfs.add(fileDetails, options)
+    console.log('---------Got---------------------------')
     console.log(filesAdded)
-    console.log("------------------------------------")
-    fileHash = `${filesAdded.cid.toString()}/${filearr.path}`
-    if (ipfsURLPrefix){
-      if(ipfsURLPrefix.endsWith('/'))
-        return (ipfsURLPrefix + fileHash)
-      else
-      return (ipfsURLPrefix + '/'+ fileHash)
-    }
-    else
-      return (ipfsURL + "/ipfs/" + fileHash)
-  }
-  catch (e) {
+    console.log('------------------------------------')
+    const fileHash = `${filesAdded.cid.toString()}/${filearr.path}`
+    if (ipfsURLPrefix) {
+      if (ipfsURLPrefix.endsWith('/')) return ipfsURLPrefix + fileHash
+      else return ipfsURLPrefix + '/' + fileHash
+    } else return ipfsURL + '/ipfs/' + fileHash
+  } catch (e) {
     console.error(e)
     return null
   }
