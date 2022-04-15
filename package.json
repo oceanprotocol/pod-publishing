@@ -4,7 +4,7 @@
   "description": "pod-publishing",
   "scripts": {
     "start": "node src/index.js --workflow \"./samples/workflow.json\" --credentials \"$(cat ~/projects/ocean/barge/networks/spree/keys/account1.json)\" --password secret --outputs /tmp/pod-publishing/ --verbose",
-    "lint": "eslint --ignore-path .gitignore --ext .ts,.tsx .",
+    "lint": "eslint --ignore-path .gitignore --ext .js .",
     "release": "release-it --no-npm.publish --github.release --no-github.draft"
   },
   "repository": {
