@@ -52,10 +52,7 @@ async function main({
   const logsDir = `${path}/logs`
   const adminlogsDir = `${path}/adminlogs`
 
-  const log = (...args) => (verbose ? console.log(...args) : undefined)
-  const { stages } = JSON.parse(fs.readFileSync(workflowPath).toString())
   AWS.config.update({ region: process.env.AWS_REGION })
-  
 
   /*
     Get all the files from adminlogs,logs,output and put them into an array */
@@ -71,7 +68,6 @@ async function main({
   adminlogs.forEach(element => {
     outputfiles.push(element)
   })
-  
 
   // Do processing on the array and add options to each file
   var alloutputsindex = 0
