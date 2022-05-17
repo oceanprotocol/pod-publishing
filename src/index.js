@@ -52,10 +52,7 @@ async function main({
   const logsDir = `${path}/logs`
   const adminlogsDir = `${path}/adminlogs`
 
-  const log = (...args) => (verbose ? console.log(...args) : undefined)
-  const { stages } = JSON.parse(fs.readFileSync(workflowPath).toString())
   AWS.config.update({ region: process.env.AWS_REGION })
-  log('Stages:', stages)
 
   /*
     Get all the files from adminlogs,logs,output and put them into an array */
@@ -71,7 +68,6 @@ async function main({
   adminlogs.forEach(element => {
     outputfiles.push(element)
   })
-  log('OutputFiles:', outputfiles)
 
   // Do processing on the array and add options to each file
   var alloutputsindex = 0
@@ -155,7 +151,6 @@ async function uploadthisfile(filearr, workflowid) {
     url = null
   }
 
-  console.log('Got ' + url + '')
   return url
 }
 
@@ -184,8 +179,6 @@ async function uploadtos3(filearr, workflowid, bucketName) {
     const fileStream = fs.createReadStream(filearr.path)
     uploadParams.Body = fileStream
     uploadParams.Key = workflowid + filearr.path
-    console.log('uploading:')
-    console.log(uploadParams)
     const putObjectPromise = await s3.upload(uploadParams).promise()
     const location = putObjectPromise.Location
     return location
@@ -235,11 +228,7 @@ async function uploadtoIPFS(
         wrapWithDirectory: true
       }
     }
-    console.log(options)
     const filesAdded = await ipfs.add(fileDetails, options)
-    console.log('---------Got---------------------------')
-    console.log(filesAdded)
-    console.log('------------------------------------')
     const fileHash = `${filesAdded.cid.toString()}/${filearr.path}`
     if (ipfsURLPrefix) {
       if (ipfsURLPrefix.endsWith('/')) return ipfsURLPrefix + fileHash
