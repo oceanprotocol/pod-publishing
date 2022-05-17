@@ -259,8 +259,7 @@ async function uploadtos3(filearr, workflowid, bucketName) {
   const uploadParams = {
     Bucket: bucketName,
     Key: '',
-    Body: '',
-    ACL: 'public-read'
+    Body: ''
   }
   try {
     const fileStream = fs.createReadStream(filearr.path)
