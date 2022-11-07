@@ -199,7 +199,7 @@ async function uploadthisfile(filearr, workflowid) {
         workflowid,
         process.env.IPFS_ADMINLOGS,
         process.env.IPFS_ADMINLOGS_PREFIX,
-        process.env.IPFS_EXPIRY_TIME,
+        process.env.STORAGE_EXPIRY,
         process.env.IPFS_API_KEY,
         process.env.IPFS_API_CLIENT
       )
@@ -219,7 +219,7 @@ async function uploadthisfile(filearr, workflowid) {
         workflowid,
         process.env.IPFS_OUTPUT,
         process.env.IPFS_OUTPUT_PREFIX,
-        process.env.IPFS_EXPIRY_TIME,
+        process.env.STORAGE_EXPIRY,
         process.env.IPFS_API_KEY,
         process.env.IPFS_API_CLIENT
       )
