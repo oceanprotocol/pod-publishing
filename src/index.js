@@ -36,7 +36,7 @@ program
         }
         process.exit(0)
       })
-      .catch(e => console.error(e))
+      .catch(e => console.log(e))
   })
   .parse(process.argv)
 
@@ -147,7 +147,7 @@ async function uploadthisfile(filearr, workflowid) {
   } else if (process.env.AWS_BUCKET_OUTPUT) {
     url = await uploadtos3(filearr, workflowid, process.env.AWS_BUCKET_OUTPUT)
   } else {
-    console.error('No IPFS_OUTPUT and no AWS_BUCKET_OUTPUT. Upload failed')
+    console.log('No IPFS_OUTPUT and no AWS_BUCKET_OUTPUT. Upload failed')
     url = null
   }
 
@@ -163,7 +163,7 @@ async function updatecolumn(column, value, workflowid) {
       sqlArr[1] = workflowid
       await pgpool.query(queryup, sqlArr)
     } catch (e) {
-      console.error(e)
+      console.log(e)
     }
   }
 }
@@ -176,13 +176,16 @@ async function uploadtos3(filearr, workflowid, bucketName) {
     Body: ''
   }
   try {
+    console.log("Uploading to S3...")
     const fileStream = fs.createReadStream(filearr.path)
     uploadParams.Body = fileStream
     uploadParams.Key = workflowid + filearr.path
     const putObjectPromise = await s3.upload(uploadParams).promise()
     const location = putObjectPromise.Location
+    console.log("Done")
     return location
   } catch (e) {
+    console.log(e)
     return null
   }
 }
@@ -235,7 +238,7 @@ async function uploadtoIPFS(
       else return ipfsURLPrefix + '/' + fileHash
     } else return ipfsURL + '/ipfs/' + fileHash
   } catch (e) {
-    console.error(e)
+    console.log(e)
     return null
   }
 }
